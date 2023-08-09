@@ -1,0 +1,481 @@
+ins---
+title: "Milk Analysis"
+author: "Gustavo Reyes"
+date: "10/25/2021"
+output: html_document
+---
+#Milk Analysis used for Pinto et al. 2023
+
+```{r}
+#Setting Working Directory-------------------------------------
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) #Set working directory to the path of document
+```
+
+##Loading Libraries
+```{r ,echo=FALSE}
+#Opening Libary and Inputs-------------------------------------
+source("Util_Library.R")
+source("Functions_Full_Analysis.R")
+```
+
+
+##Loading Model Necessary Inputs. 
+```{r}
+library(tidyverse)
+#Inputs and Source Files-------------------------------------
+
+#Inputs
+source("Main_Loop.R")
+source("Input_Static.R")
+source("Input_Functions.R")
+source("Util_DFFunctions.R")
+source("Util_DFWeekCreation.R")
+source("Util_Counter&Lists.R")
+#Functions
+source("Util_Functions.R")
+source("Util_CCFunctions2.R")
+source("Util_VisualFunctions.R")
+source("Util_Output_Functions.R")
+
+```
+
+## Generating Change from T and Temp Data
+This chunk read the csv data for the milk over the 5 day period and the refrigerated control over the 5 day period
+```{r}
+#Milk 5 day period data
+Time_Temp_Profile<-read.csv("5-Day-Milk-Data.csv")
+
+#Milk Refrigerated control data
+Time_Temp_Profile_RC<-read.csv("5-Day-Refrigerated-Control-Data.csv")
+```
+
+## Functions for growth and lag phases 
+These functions are the ones that calculate the adjusted growth rate and adjusted lag phase based on the temperature at which the milk is exposed to. 
+```{r}
+#Function for growth and lag phase
+new_growth_rate<-function(newTemp, oldMu,oldTemp = 6, T0 = -4.15){
+  newMu<-((newTemp-T0)/(oldTemp-T0))* oldMu
+  return (newMu)
+}
+
+#Calculation of the new lag time.
+new_lag_time <- function (newTemp, oldLag, oldTemp = 6, T0 = -4.15) {
+  numerator <- oldTemp -T0
+  denom <- newTemp - T0
+  newLag <- ( (numerator / denom)^2) * oldLag
+  return(newLag)
+}
+```
+
+## Functions to create a time and temperature profiles based on given parameters
+This functions are not necessarily used in the model. However, they are here in case a different time and temperature profile for milk had to be created. 
+```{r}
+#Not in use, function to create a data frame based on interval and initial and final temperature
+Time_Temp_Creation<-function(Total_Time, Interval, Initial_Temperature, Final_Temperature){
+  Time_Temp_df<-data.frame("min"= seq(0,Total_Time,by = Interval),
+                         "tempM"  = seq(Initial_Temperature,Final_Temperature, by = ((Final_Temperature - Initial_Temperature)/(length(seq(0,Total_Time,by = Interval)) - 1) )))
+}
+
+Time_Temp_Creation_Var<-function(Total_Time, Interval, Mean_Temperature, SD_Temperature){
+  Time_Temp_df<-data.frame("min"= seq(0,Total_Time,by = Interval),
+                         "tempM"= rnorm(n =Total_Time+1, mean = Mean_Temperature, sd= SD_Temperature))
+  return (Time_Temp_df)
+}
+```
+
+## Function to calculate growth of R100084 P Paoae using a buchanan 3 phase linear model.  
+```{r}
+#This function calculates thee growth based on a time and temperature profile for 1 specific milk with R100084 P Paoae
+Func_Growth_LagCon<-function(In_Lag_Consumed,Time_Temp_df,Interval, AF){
+  #In_Lag_Consumed= Total lag time consumed
+  #Time_Temp_df = dataframe with time and temperature conditions
+  #Interval = time interval in the time_temp_df in hrs. 
+  Total_Lag_Consumed = In_Lag_Consumed
+  Total_Growth = 0
+  old_lag = 0
+  NMax = 8.14 #P Paoae N max
+  old_mumax = 0.083508 #P Paoae mu max at 6°C
+  Growth_V = c()
+  for (i in 1:nrow(Time_Temp_df)){
+    if (Total_Lag_Consumed <1 && old_lag!=0){
+      Lag_t_interval<-new_lag_time(newTemp = Time_Temp_df$tempM[i], oldLag = old_lag)
+      Lag_Consumed<-Interval/Lag_t_interval
+      Total_Lag_Consumed<-Total_Lag_Consumed+Lag_Consumed
+      Growth = 0
+    } else if (Total_Lag_Consumed>=1 | old_lag == 0){
+      Growth = ((new_growth_rate(newTemp = Time_Temp_df$tempM[i], oldMu = old_mumax))/2.303)* AF #0.684 #Converted log10 from log ln
+      Total_Growth = Total_Growth + (Growth*Interval)
+    }
+    Growth_V = c(Growth_V,Total_Growth)
+    #print(length(Growth_V))
+  }
+  return(list(Total_Growth,Total_Lag_Consumed,Growth_V))
+}
+
+#Buchanan spoilage function
+Spoilage_Function_Single_Milk<-function(Cont, Pop_Max, Time_Temp_df, Interval =1/60, AF){
+  Lag_Consumed = 0
+  #this function provides two outputs, the total growth, and the new updated lag phase consumed. 
+  Output_Milk<-Func_Growth_LagCon(In_Lag_Consumed = Lag_Consumed ,Time_Temp_df = Time_Temp_df,Interval = Interval, AF=AF)
+  Lag_Consumed = Output_Milk[[2]]
+  Cont<-Output_Milk[[1]]+Cont
+  if( Cont>Pop_Max){
+     Cont = Pop_Max
+  }
+  return (list(Cont,Output_Milk[[3]]))
+}
+```
+
+
+## Generating P Paoae population change as a factor of  the time and temperature conditions, considering the adjustment factor.
+
+An adjustment factor of 1.32 was chosen to match the growth rate obtained to match the experimental trials for this study. 
+
+Thus chunk generates change as a factor of time in system. 
+```{r}
+#Growth of milk over the ST 5 day condition
+Output_Milk<-Spoilage_Function_Single_Milk(Cont = 2.44, Pop_Max =8.14, Time_Temp_df = Time_Temp_Profile, Interval =1/60,AF = 1.32)
+Changes_Over_Time<-2.44+Output_Milk[[2]]
+#plot(Changes_Over_Time)
+
+#Growth of milk for the refrigerated control
+Output_Milk_RC<-Spoilage_Function_Single_Milk(Cont = 2.44, Pop_Max =8.14, Time_Temp_df = Time_Temp_Profile_RC, Interval =1/60,AF = 1.32)
+Changes_Over_Time_RC<-2.44+Output_Milk_RC[[2]]
+#plot(Changes_Over_Time_RC)
+
+#calculating the milk with the fixed model Adjustment Factor 1.00. 
+
+#Growth of milk over the ST 5 day condition
+Output_Milk<-Spoilage_Function_Single_Milk(Cont = 2.44, Pop_Max =8.14, Time_Temp_df = Time_Temp_Profile, Interval =1/60,AF = 1)
+Changes_Over_Time_NAF<-2.44+Output_Milk[[2]]
+
+#Growth of milk using overnight storage
+Output_Milk_RC<-Spoilage_Function_Single_Milk(Cont = 2.44, Pop_Max =8.14, Time_Temp_df = Time_Temp_Profile_RC, Interval =1/60,AF = 1)
+Changes_Over_Time_RC_NAF<-2.44+Output_Milk_RC[[2]]
+```
+
+## Creates supplemental plot where we compare the  growth curves of the predicted plot with the adjustment factor vs. the experimental conditions
+
+```{r}
+df_rt_AF = data.frame("Share Table" = Changes_Over_Time,
+                      "Refrigerated Control" = Changes_Over_Time_RC[1:length(Changes_Over_Time)],
+                      "min" = 1:length(Changes_Over_Time))
+
+df_rt_AF_melted<-melt(df_rt_AF,id.vars = "min")
+df_rt_AF_melted$AF = "Adjusted (Factor = 1.32)"
+
+df_rt_NAF = data.frame("Share Table" =Changes_Over_Time_NAF,
+                      "Refrigerated Control" = Changes_Over_Time_RC_NAF[1:length(Changes_Over_Time_NAF)],
+                      "min" = 1:length(Changes_Over_Time_NAF))
+
+df_rt_NAF_melted<-melt(df_rt_NAF,id.vars = "min" )
+df_rt_NAF_melted$AF = "Not Adjusted"
+
+December_Growth_Data_R1<-data.frame("min" = c(0,125,1440,1565,2880,3005,4320,4195,5760,5885), 
+                                    "counts" = c(2.53,2.48, 3.65,3.95,4.87, 5.18, 6.3,6.32,6.89,7.1))
+
+December_Growth_Data_R2<-data.frame("min" = c(0,125,1440,1565,2880,3005,4320,4195,5760,5885), 
+                                    "counts" = c(2.51,2.81, 3.69, 3.76, 5.02, 5.11, 6.24,6.41,7.19,7.15))
+
+December_Growth_Data_R3<-data.frame("min" = c(0,125,1440,1565,2880,3005,4320,4195,5760,5885), 
+                                    "counts" = c(2.62, 2.9,3.62,3.59,  4.94, 5.12,6.16, 6.38,7.13,7.2))
+
+December_Growth_Data_Comb = rbind(December_Growth_Data_R1,December_Growth_Data_R2,December_Growth_Data_R3)
+
+
+December_RC_Data_Comb<-data.frame("min" = c(0,1440,2880,4320,5760), 
+                                    "counts" = c(2.44, 3.25,4.31,5.39,6.19))
+
+
+
+Data_For_Plot = rbind(df_rt_AF_melted,df_rt_NAF_melted)
+
+ggplot(aes(x = min, y = value), data = Data_For_Plot)+
+geom_line(aes(color = variable), linewidth = 1)+
+facet_wrap(~AF)+
+theme_bw()+
+theme(legend.position="bottom",legend.box="vertical")+
+geom_point(data = December_Growth_Data_Comb, aes(x  = min, y = counts, fill = "Experimental ST System 2hr"), shape = 21)+
+geom_point(data = December_RC_Data_Comb, aes(x  = min, y = counts,fill = "Experiment Refrigerated Control"), shape = 22)+
+scale_fill_manual(name = "",values = c("Experimental ST System 2hr" = "coral", "Experiment Refrigerated Control" = "darkblue"))+
+scale_color_discrete(name = "",labels=c('Modeled ST System 2hr',"Experiment Refrigerated Control"))+
+  geom_hline(yintercept = 6.0, color = "black", linewidth = 1)+
+geom_text(aes(2000,5.8,label = "Quality Threshold = 6.0"), color = "black", size  = 3,check_overlap = TRUE)+
+  labs(x= "Residence time in system (min)", y = expression("Average log"[10]~"CFU/ml"))
+
+ggsave("Figures/Supplemental-Predicted vs Experimental.jpg", width =7, height = 5, units = "in", dpi = 300)
+
+```
+
+
+##Running the  Model for Milk.
+```{r warning=TRUE}
+#Running Loop First:-------------------------------------
+start_time<-Sys.time()
+source("Main_Loops2.R")
+```
+
+## This converts the list of dataframes from the simulation into a full clean dataframe, 
+```{r}
+#1. Start from here
+Individual_Analysis<-rbind.fill(List_Sens_Pre)
+
+#2. find the duplicates
+#this step filters replicated based on the ID
+Individual_Analysis<-Individual_Analysis %>% 
+  group_by(ID) %>% 
+  filter(TotServices==max(TotServices))
+#3
+AnalysysDF<-Individual_Analysis
+AnalysysDF_2<-Individual_Analysis
+
+#Adding the time of the services for those milks that were added to the service line during the lunch period. The residence time is ajusted to show all milks were set outusde refrigeration for the whole lunch period. 
+AnalysysDF[AnalysysDF$Initial.Service>1,]
+AnalysysDF$TotTime<-AnalysysDF$TotTime+(as.integer(AnalysysDF$Initial.Service)-1)*(Time_Service_Length + Time_Turnaround_Length)
+AnalysysDF$Shared<-ifelse(AnalysysDF$STtimes>0, "Yes", "No")
+```
+
+
+## Updating Final levels in milk based on the growth observed as the total residence time in milk
+```{r}
+Output_Milk<-Spoilage_Function_Single_Milk(Cont = 2.44, Pop_Max =8.14, Time_Temp_df = Time_Temp_Profile, Interval =1/60,AF = 1.32)
+Changes_Over_Time<-Output_Milk[[2]]
+
+
+NMax = 8.14
+for (i in 1:nrow(AnalysysDF)){
+  In_Cont<-AnalysysDF$InSpoilageCon[i]
+  Time<-AnalysysDF$TotTime[i]
+  if (Time == 0){
+    Total_Growth = 0
+  }else{
+    Total_Growth<-Changes_Over_Time[Time]
+  }
+  Final_Con<-In_Cont+Total_Growth
+  if(Final_Con>NMax){
+    Final_Con <- NMax
+  }
+  AnalysysDF$SpoilageCon[i]<-Final_Con
+}
+
+```
+
+## Analysis and Generating outputs
+
+#Relationship between Time and APC Levels. Main Figure
+```{r}
+p_1_log<-AnalysysDF%>% 
+  ggplot(aes(y = SpoilageCon, x= TotTime, fill= Shared, shape = Shared))+
+  geom_point( size =2, alpha = 0.7, color = "black")+
+  geom_hline(yintercept =6)+
+geom_text(aes(100,6.5,label = "Quality Threshold = 6.0"), color = "black", size  = 3,check_overlap = TRUE)+
+  facet_wrap(.~Location)+
+  labs(x = "Residence Time in Cafeteria System (min)", y = expression("Pseudomonas poae population (log"[10]~"CFU/ml)"))+
+  scale_y_continuous()+
+  scale_shape_manual(values = c(21,23))+
+  scale_fill_manual(values = c("coral1", "seagreen3"))+
+  scale_x_log10(n.breaks= 10)+
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = -45, vjust = -0.3))+
+  theme(legend.position="bottom")+
+  geom_segment(aes(x = 1440 , y = -Inf, xend = 1440, yend = 6,linetype = "Start of Day"))+
+  geom_segment(aes(x = 2880 , y = -Inf, xend = 2880, yend = 6), linetype = "dotted") +
+  geom_segment(aes(x = 4320 , y = -Inf, xend = 4320, yend = 6), linetype = "dotted") +
+  geom_segment(aes(x = 0 , y = -Inf, xend = 0, yend = 6), linetype = "dotted")  +
+  geom_segment(aes(x = 5760 , y = -Inf, xend = 5760, yend = 6), linetype = "dotted") +
+  scale_linetype_manual(name = "",values = c("dotted"))
+
+ggsave("Figures/Share Table Spoilage-log.jpg", width =8, height = 5, units = "in", dpi = 300)
+
+
+p_1<-AnalysysDF%>%
+  ggplot(aes(y = SpoilageCon, x= TotTime, fill= Shared, shape = Shared))+
+  geom_point( size =2, alpha = 0.7, color = "black")+
+  geom_hline(yintercept =6)+
+geom_text(aes(2000,6.5,label = "Quality Threshold = 6.0"), color = "black", size  = 3,check_overlap = TRUE)+
+  facet_wrap(.~Location)+
+  labs(x = "Residence Time in Cafeteria System (min)", y = expression("Pseudomonas poae population (log"[10]~"CFU/ml)"))+
+  scale_y_continuous()+
+  scale_shape_manual(values = c(21,23))+
+  scale_fill_manual(values = c("coral1", "seagreen3"))+
+  #scale_x_log10(n.breaks= 12)+
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = -45, vjust = -0.3))+
+  theme(legend.position="bottom")+
+  geom_segment(aes(x = 1440 , y = -Inf, xend = 1440, yend = 6,linetype = "Start of Day") )+
+  geom_segment(aes(x = 2880 , y = -Inf, xend = 2880, yend = 6), linetype = "dotted") +
+  geom_segment(aes(x = 4320 , y = -Inf, xend = 4320, yend = 6), linetype = "dotted") +
+  geom_segment(aes(x = 0 , y = -Inf, xend = 0, yend = 6), linetype = "dotted") +
+  geom_segment(aes(x = 5760 , y = -Inf, xend = 5760, yend = 6), linetype = "dotted") +
+  scale_linetype_manual(name = "",values = c("dotted"))
+
+ggsave("Figures/Share Table Spoilage-NonLog.jpg", width =8, height = 5, units = "in", dpi = 300)
+```
+
+## Code to Generate Summary Tables S3 aand S4.
+
+# Table S3 and Table S4
+```{r}
+
+#Table s3 and Table S4
+
+#Overall
+Overall_s3<-AnalysysDF %>% 
+  #filter(Shared == "No") %>% 
+  summarize(TimeMedian= median(TotTime), 
+            Timeq25 = quantile(TotTime, 0.025), 
+            Timeq975 = quantile(TotTime, 0.975),
+            PoPChangeMedian = median(SpoilageCon - InSpoilageCon),
+            PopChangeq25 =  quantile(SpoilageCon - InSpoilageCon, 0.025),
+            PopChange1975 = quantile(SpoilageCon - InSpoilageCon, 0.975),
+            TotalSpoiled = sum(SpoilageCon>6),
+            Per_Spoiled = (sum(SpoilageCon>6)/nrow(.))*100
+            ) %>% 
+  mutate(Type = "Overall")
+
+
+NotShared_s3<-AnalysysDF %>% 
+  filter(Shared == "No") %>% 
+  summarize(TimeMedian= median(TotTime), 
+            Timeq25 = quantile(TotTime, 0.025), 
+            Timeq975 = quantile(TotTime, 0.975),
+            PoPChangeMedian = median(SpoilageCon - InSpoilageCon),
+            PopChangeq25 =  quantile(SpoilageCon - InSpoilageCon, 0.025),
+            PopChange1975 = quantile(SpoilageCon - InSpoilageCon, 0.975),
+            TotalSpoiled = sum(SpoilageCon>6),
+            Per_Spoiled = (sum(SpoilageCon>6)/nrow(.))*100
+            ) %>% 
+  mutate(Type = "Not Shared")
+
+Shared_s3<-AnalysysDF %>% 
+  filter(Shared == "Yes") %>% 
+  summarize(TimeMedian= median(TotTime), 
+            Timeq25 = quantile(TotTime, 0.025), 
+            Timeq975 = quantile(TotTime, 0.975),
+            PoPChangeMedian = median(SpoilageCon - InSpoilageCon),
+            PopChangeq25 =  quantile(SpoilageCon - InSpoilageCon, 0.025),
+            PopChange1975 = quantile(SpoilageCon - InSpoilageCon, 0.975),
+            TotalSpoiled = sum(SpoilageCon>6),
+            Per_Spoiled = (sum(SpoilageCon>6)/nrow(.))*100
+            ) %>% 
+  mutate(Type = "Shared")
+
+
+Table_s3<-rbind(Overall_s3, NotShared_s3, Shared_s3)
+
+
+
+### Table S4
+AnalysysDF %>% 
+  group_by(Location) %>% 
+  summarise(count = n(),
+            percentage = count/nrow(.),
+            day1= sum(TotTime<1440),
+            day1_per = sum(TotTime<1440)/nrow(.),
+            day2 =sum(TotTime>1440 & TotTime<1440*2),
+            day2_per = sum(TotTime>1440 & TotTime<1440*2)/nrow(.),
+            day3= sum(TotTime>1440*2 & TotTime<1440*3),
+            day3_per = sum(TotTime>1440*2 & TotTime<1440*3)/nrow(.),
+            day4= sum(TotTime>1440*3 & TotTime<1440*4),
+            day4_per = sum(TotTime>1440*3 & TotTime<1440*4)/nrow(.),
+            day5= sum(TotTime>1440*4 & TotTime<1440*5),
+            day5_per = sum(TotTime>1440*4 & TotTime<1440*5)/nrow(.),
+            )
+
+
+#Summary for paper line 448
+AnalysysDF %>% 
+  filter(Shared == "Yes") %>% 
+  group_by(Location) %>% 
+  summarise(count = n(),
+            per = (count/nrow(.))*100)
+
+```
+
+
+
+
+# ADDITIONAL ANALYSES
+
+
+###How many Items ended up in which locations
+```{r}
+library(scales)
+library(forcats)
+
+AnalysysDF %>% 
+  count(Location) %>% 
+  arrange(desc(n)) %>% 
+  mutate(Location = fct_reorder(Location, n)) %>%
+  ggplot(aes(x =Location, y = n/sum(n)*100))+
+  scale_y_continuous(labels = scales::percent_format(scale = 1) )+
+  geom_col()+
+  labs(x = "Final Food Location", y = "Percent of milk items by location", title= "Final Location for milk-Donation happens end of week")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  coord_flip()
+  
+```
+
+###What is the distribution of time for the milk items
+
+```{r}
+AnalysysDF %>%
+  ggplot(aes(x = TotTime))+
+  geom_histogram()+
+  scale_x_continuous(n.breaks= 10)+
+  labs(x = "Time in Minutes", y = "Count ", title= "Time in system by Item week")+
+  theme(plot.title = element_text(hjust = 0.5))
+  
+
+```
+
+###APC Contamination by Items
+
+```{r}
+AnalysysDF %>%
+  ggplot()+
+  geom_histogram(aes(x = SpoilageCon),color="darkblue", fill="lightblue",alpha= 0.3)+
+  geom_histogram(aes(x = InSpoilageCon),color="darkblue", fill="lightgreen", alpha= 0.3)+
+  geom_vline(xintercept =6, color= "Red")+
+  scale_x_continuous(n.breaks= 10)+
+  labs(x = "Phsychotroph Population Log CFU/ml", y = "Count", title= "Levels per milk carton")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+```{r}
+AnalysysDF %>% 
+  group_by(ConsumedAt) %>% 
+  summarise(ChangeCon = SpoilageCon-InSpoilageCon) %>% 
+  filter(ConsumedAt!="") %>% 
+  ggplot(aes(x = ChangeCon, fill = ConsumedAt))+
+  geom_histogram(bins=50)+
+  labs(x = "Change in population log CFU/ml")
+
+```
+
+
+
+
+#Change in Contamination Levels due to Time
+  ##Need to figure out a way to track contamination change. 
+```{r}
+AnalysysDF %>% 
+  mutate(Change_Cont = SpoilageCon-InSpoilageCon) %>% 
+  ggplot(aes(y = Change_Cont, x= TotTime, fill = Shared))+
+  geom_point( size =2, shape = 21, alpha = 0.7)+
+  facet_wrap(.~Location)+
+  labs(x = "Residence Time in Cafeteria System (min)", y = expression("Pseudomonas poae population Change (log"[10]~"CFU/ml"))+
+  scale_y_continuous()+
+  scale_x_log10(n.breaks= 10)+
+  theme(plot.title = element_text(hjust = 0.5))+
+  theme_bw()+
+  theme(legend.position="bottom")+
+  theme(axis.text.x = element_text(angle = -45, vjust = -0.3))
+
+#ggsave("growth over time 2.0.jpg", width =8, height = 5, units = "in", dpi = 300)
+
+
+```
