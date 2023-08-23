@@ -26,7 +26,7 @@
   Food_Days<-5 # 5 days of iterations
 
   #Weeks
-  Sens_Iterations<-10 #1000 weeks
+  Sens_Iterations<-1000 #1000 weeks
   
   
 #Lengths for milk model #need to make sense with no services all have to add up to 1440

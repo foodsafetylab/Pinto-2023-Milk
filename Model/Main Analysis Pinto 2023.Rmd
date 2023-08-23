@@ -47,6 +47,14 @@ Time_Temp_Profile<-read.csv("5-Day-Milk-Data.csv")
 
 #Milk Refrigerated control data
 Time_Temp_Profile_RC<-read.csv("5-Day-Refrigerated-Control-Data.csv")
+
+
+#$$$$$ Gabby load winter run CSVs..... as bove, name Time_Temp_Profile_summer
+
+Time_Temp_Profile_summer<-#read.csv("5-Day-Milk-Data.csv")
+
+#Milk Refrigerated control data
+Time_Temp_Profile_RC_summer<-#read.csv("5-Day-Refrigerated-Control-Data.csv")
 ```
 
 ## Functions for growth and lag phases 
@@ -241,6 +249,7 @@ Individual_Analysis<-Individual_Analysis %>%
   filter(TotServices==max(TotServices))
 #3
 AnalysysDF<-Individual_Analysis
+#$$ Gabby run line 253
 AnalysisDF_Summer<-Individual_Analysis
 AnalysysDF_2<-Individual_Analysis
 
@@ -250,7 +259,7 @@ AnalysysDF$TotTime<-AnalysysDF$TotTime+(as.integer(AnalysysDF$Initial.Service)-1
 AnalysysDF$Shared<-ifelse(AnalysysDF$STtimes>0, "Yes", "No")
 
 
-#Updating the summer one
+#$$$$$ Gabby make sure this is done correctly. 
 #Adding the time of the services for those milks that were added to the service line during the lunch period. The residence time is ajusted to show all milks were set outusde refrigeration for the whole lunch period. 
 AnalysisDF_Summer[AnalysisDF_Summer$Initial.Service>1,]
 AnalysisDF_Summer$TotTime<-AnalysisDF_Summer$TotTime+(as.integer(AnalysisDF_Summer$Initial.Service)-1)*(Time_Service_Length + Time_Turnaround_Length)
@@ -281,13 +290,23 @@ for (i in 1:nrow(AnalysysDF)){
   AnalysysDF$SpoilageCon[i]<-Final_Con
 }
 
-#Summmer..
+#$$$$$Summmer.. Gabby run as the code above with Analysis DF_summer
 Output_Milk_Summer<-Spoilage_Function_Single_Milk(Cont = 0, Pop_Max =8.14, Time_Temp_df = Time_Temp_Profile, Interval =1/60,AF = 1.32)
 Changes_Over_Time_Summer<-Output_Milk_Summer[[2]]
 
 ```
 
 ## Analysis and Generating outputs
+
+```{r}
+AnalysysDF$Season <-"Winter"
+#AnalysysDF_Summer$Season <-"Summer"
+
+#Analysis_df_allseason<-rbind(AnalysysDF,AnalysysDF_Summer)
+```
+
+
+
 
 #Relationship between Time and APC Levels. Main Figure
 ```{r}
@@ -296,7 +315,7 @@ p_1_log<-AnalysysDF%>%
   geom_point( size =2, alpha = 0.7, color = "black")+
   geom_hline(yintercept =6)+
 geom_text(aes(100,6.5,label = "Quality Threshold = 6.0"), color = "black", size  = 3,check_overlap = TRUE)+
-  facet_wrap(.~Location)+
+  facet_wrap(Season~Location)+
   labs(x = "Residence Time in Cafeteria System (min)", y = expression("Pseudomonas poae population (log"[10]~"CFU/ml)"))+
   scale_y_continuous()+
   scale_shape_manual(values = c(21,23))+
@@ -313,7 +332,7 @@ geom_text(aes(100,6.5,label = "Quality Threshold = 6.0"), color = "black", size 
   geom_segment(aes(x = 5760 , y = -Inf, xend = 5760, yend = 6), linetype = "dotted") +
   scale_linetype_manual(name = "",values = c("dotted"))
 
-#p_1_log
+p_1_log
 
 #ggsave("Figures/Share Table Spoilage-log.jpg", width =8, height = 5, units = "in", dpi = 300)
 
