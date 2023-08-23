@@ -1,0 +1,180 @@
+day,shift type,type,Season,media,rep,log shift
+1,share table,Not Inoculated,Summer,sma,1,0
+1,share table,Not Inoculated,Summer,sma,2,0
+1,share table,Not Inoculated,Summer,sma,3,0
+2,share table,Not Inoculated,Summer,sma,4,0
+1,overnight,Not Inoculated,Summer,sma,1,0
+1,overnight,Not Inoculated,Summer,sma,2,0.27
+1,overnight,Not Inoculated,Summer,sma,3,0
+1,overnight,Not Inoculated,Summer,sma,4,0
+2,share table,Not Inoculated,Summer,sma,1,-0.0015
+2,share table,Not Inoculated,Summer,sma,2,-0.081
+2,share table,Not Inoculated,Summer,sma,3,0.28
+2,share table,Not Inoculated,Summer,sma,4,0.02
+2,overnight,Not Inoculated,Summer,sma,1,0.69
+2,overnight,Not Inoculated,Summer,sma,2,0.48
+2,overnight,Not Inoculated,Summer,sma,3,0.43
+2,overnight,Not Inoculated,Summer,sma,4,0.52
+3,share table,Not Inoculated,Summer,sma,1,0.12
+3,share table,Not Inoculated,Summer,sma,2,0.13
+3,share table,Not Inoculated,Summer,sma,3,-0.0043
+3,share table,Not Inoculated,Summer,sma,4,0.33
+3,overnight,Not Inoculated,Summer,sma,1,0.57
+3,overnight,Not Inoculated,Summer,sma,2,0.7
+3,overnight,Not Inoculated,Summer,sma,3,0.8
+3,overnight,Not Inoculated,Summer,sma,4,0.59
+4,share table,Not Inoculated,Summer,sma,1,0.21
+4,share table,Not Inoculated,Summer,sma,2,0.19
+4,share table,Not Inoculated,Summer,sma,3,0.09
+4,share table,Not Inoculated,Summer,sma,4,0.16
+4,overnight,Not Inoculated,Summer,sma,1,0.47
+4,overnight,Not Inoculated,Summer,sma,2,0.58
+4,overnight,Not Inoculated,Summer,sma,3,0.67
+4,overnight,Not Inoculated,Summer,sma,4,0.49
+5,share table,Not Inoculated,Summer,sma,1,0.4
+5,share table,Not Inoculated,Summer,sma,2,0.31
+5,share table,Not Inoculated,Summer,sma,3,0.42
+5,share table,Not Inoculated,Summer,sma,4,0.26
+1,share table,Inoculated,Summer A,sma,1,0
+1,share table,Inoculated,Summer A,sma,2,0
+1,share table,Inoculated,Summer A,sma,3,0
+2,share table,Inoculated,Summer A,sma,4,0
+1,overnight,Inoculated,Summer A,sma,1,0.7
+1,overnight,Inoculated,Summer A,sma,2,0.73
+1,overnight,Inoculated,Summer A,sma,3,0.49
+1,overnight,Inoculated,Summer A,sma,4,0.33
+2,share table,Inoculated,Summer A,sma,1,0.16
+2,share table,Inoculated,Summer A,sma,2,-0.065
+2,share table,Inoculated,Summer A,sma,3,0.2
+2,share table,Inoculated,Summer A,sma,4,0.35
+2,overnight,Inoculated,Summer A,sma,1,1.13
+2,overnight,Inoculated,Summer A,sma,2,1.02
+2,overnight,Inoculated,Summer A,sma,3,0.95
+2,overnight,Inoculated,Summer A,sma,4,1.03
+3,share table,Inoculated,Summer A,sma,1,0.18
+3,share table,Inoculated,Summer A,sma,2,0.49
+3,share table,Inoculated,Summer A,sma,3,0.33
+3,share table,Inoculated,Summer A,sma,4,0.047
+3,overnight,Inoculated,Summer A,sma,1,1.2
+3,overnight,Inoculated,Summer A,sma,2,1.08
+3,overnight,Inoculated,Summer A,sma,3,1.47
+3,overnight,Inoculated,Summer A,sma,4,1.63
+4,share table,Inoculated,Summer A,sma,1,0.15
+4,share table,Inoculated,Summer A,sma,2,0.31
+4,share table,Inoculated,Summer A,sma,3,0.046
+4,share table,Inoculated,Summer A,sma,4,0.21
+4,overnight,Inoculated,Summer A,sma,1,0.95
+4,overnight,Inoculated,Summer A,sma,2,0.73
+4,overnight,Inoculated,Summer A,sma,3,0.76
+4,overnight,Inoculated,Summer A,sma,4,0.68
+5,share table,Inoculated,Summer A,sma,1,0.034
+5,share table,Inoculated,Summer A,sma,2,0.0088
+5,share table,Inoculated,Summer A,sma,3,0.33
+5,share table,Inoculated,Summer A,sma,4,0.16
+1,share table,Inoculated,Summer B,sma,1,0
+1,share table,Inoculated,Summer B,sma,2,0
+1,share table,Inoculated,Summer B,sma,3,0
+2,share table,Inoculated,Summer B,sma,4,-0.2
+1,overnight,Inoculated,Summer B,sma,1,0.58
+1,overnight,Inoculated,Summer B,sma,2,0.64
+1,overnight,Inoculated,Summer B,sma,3,0.68
+1,overnight,Inoculated,Summer B,sma,4,0.69
+2,share table,Inoculated,Summer B,sma,1,0.2
+2,share table,Inoculated,Summer B,sma,2,0.17
+2,share table,Inoculated,Summer B,sma,3,0.15
+2,share table,Inoculated,Summer B,sma,4,0.42
+2,overnight,Inoculated,Summer B,sma,1,1.14
+2,overnight,Inoculated,Summer B,sma,2,0.71
+2,overnight,Inoculated,Summer B,sma,3,1.17
+2,overnight,Inoculated,Summer B,sma,4,0.92
+3,share table,Inoculated,Summer B,sma,1,-0.017
+3,share table,Inoculated,Summer B,sma,2,0.34
+3,share table,Inoculated,Summer B,sma,3,0.25
+3,share table,Inoculated,Summer B,sma,4,0.11
+3,overnight,Inoculated,Summer B,sma,1,1.63
+3,overnight,Inoculated,Summer B,sma,2,1.38
+3,overnight,Inoculated,Summer B,sma,3,1.22
+3,overnight,Inoculated,Summer B,sma,4,1.16
+4,share table,Inoculated,Summer B,sma,1,0.065
+4,share table,Inoculated,Summer B,sma,2,0.15
+4,share table,Inoculated,Summer B,sma,3,-0.1
+4,share table,Inoculated,Summer B,sma,4,0.12
+4,overnight,Inoculated,Summer B,sma,1,0.66
+4,overnight,Inoculated,Summer B,sma,2,0.56
+4,overnight,Inoculated,Summer B,sma,3,0.92
+4,overnight,Inoculated,Summer B,sma,4,0.41
+5,share table,Inoculated,Summer B,sma,1,0.18
+5,share table,Inoculated,Summer B,sma,2,0.4
+5,share table,Inoculated,Summer B,sma,3,0.14
+5,share table,Inoculated,Summer B,sma,4,0.46
+1,Refrigerated Control,Inoculated,Summer A,sma,1,0.16
+2,Refrigerated Control,Inoculated,Summer A,sma,1,0.84
+3,Refrigerated Control,Inoculated,Summer A,sma,1,1.16
+4,Refrigerated Control,Inoculated,Summer A,sma,1,0.84
+1,Refrigerated Control,Inoculated,Summer B,sma,1,0.39
+2,Refrigerated Control,Inoculated,Summer B,sma,1,0.94
+3,Refrigerated Control,Inoculated,Summer B,sma,1,0.84
+4,Refrigerated Control,Inoculated,Summer B,sma,1,0.83
+1,Refrigerated Control,Not Inoculated,Summer,sma,1,0
+2,Refrigerated Control,Not Inoculated,Summer,sma,1,0
+3,Refrigerated Control,Not Inoculated,Summer,sma,1,0.38
+4,Refrigerated Control,Not Inoculated,Summer,sma,1,0.39
+1,overnight,Not Inoculated,Winter,sma,1,0
+1,overnight,Not Inoculated,Winter,sma,2,0
+1,overnight,Not Inoculated,Winter,sma,3,0
+2,share table,Not Inoculated,Winter,sma,1,0
+2,share table,Not Inoculated,Winter,sma,2,0
+2,share table,Not Inoculated,Winter,sma,3,0
+2,overnight,Not Inoculated,Winter,sma,1,0
+2,overnight,Not Inoculated,Winter,sma,2,0
+2,overnight,Not Inoculated,Winter,sma,3,0
+3,share table,Not Inoculated,Winter,sma,1,0
+3,share table,Not Inoculated,Winter,sma,2,0
+3,share table,Not Inoculated,Winter,sma,3,0
+3,overnight,Not Inoculated,Winter,sma,1,0
+3,overnight,Not Inoculated,Winter,sma,2,0
+3,overnight,Not Inoculated,Winter,sma,3,0
+4,share table,Not Inoculated,Winter,sma,1,0
+4,share table,Not Inoculated,Winter,sma,2,0
+4,share table,Not Inoculated,Winter,sma,3,0
+4,overnight,Not Inoculated,Winter,sma,1,0
+4,overnight,Not Inoculated,Winter,sma,2,0
+4,overnight,Not Inoculated,Winter,sma,3,0
+5,share table,Not Inoculated,Winter,sma,1,0
+5,share table,Not Inoculated,Winter,sma,2,0
+5,share table,Not Inoculated,Winter,sma,3,0
+1,share table,Inoculated,Winter,sma,1,0.15
+1,share table,Inoculated,Winter,sma,2,0.11
+1,share table,Inoculated,Winter,sma,3,0.13
+1,overnight,Inoculated,Winter,sma,1,1.16
+1,overnight,Inoculated,Winter,sma,2,1.32
+1,overnight,Inoculated,Winter,sma,3,1.14
+2,share table,Inoculated,Winter,sma,1,0.18
+2,share table,Inoculated,Winter,sma,2,-0.064
+2,share table,Inoculated,Winter,sma,3,0.3
+2,overnight,Inoculated,Winter,sma,1,1.02
+2,overnight,Inoculated,Winter,sma,2,1.25
+2,overnight,Inoculated,Winter,sma,3,1.06
+3,share table,Inoculated,Winter,sma,1,0.22
+3,share table,Inoculated,Winter,sma,2,0.011
+3,share table,Inoculated,Winter,sma,3,0.23
+3,overnight,Inoculated,Winter,sma,1,1.17
+3,overnight,Inoculated,Winter,sma,2,1.26
+3,overnight,Inoculated,Winter,sma,3,1.11
+4,share table,Inoculated,Winter,sma,1,0.28
+4,share table,Inoculated,Winter,sma,2,0.3
+4,share table,Inoculated,Winter,sma,3,0.23
+4,overnight,Inoculated,Winter,sma,1,0.68
+4,overnight,Inoculated,Winter,sma,2,0.66
+4,overnight,Inoculated,Winter,sma,3,0.78
+5,share table,Inoculated,Winter,sma,1,0
+5,share table,Inoculated,Winter,sma,2,0.11
+5,share table,Inoculated,Winter,sma,3,0.089
+1,Refrigerated Control,Not Inoculated,Winter,sma,1,0
+2,Refrigerated Control,Not Inoculated,Winter,sma,1,0
+3,Refrigerated Control,Not Inoculated,Winter,sma,1,0
+4,Refrigerated Control,Not Inoculated,Winter,sma,1,0
+1,Refrigerated Control,Inoculated,Winter,sma,1,0.62
+2,Refrigerated Control,Inoculated,Winter,sma,1,1.15
+3,Refrigerated Control,Inoculated,Winter,sma,1,1.04
+4,Refrigerated Control,Inoculated,Winter,sma,1,1.16
