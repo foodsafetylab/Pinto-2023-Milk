@@ -58,6 +58,7 @@ new_growth_rate<-function(newTemp, oldMu,oldTemp = 6, T0 = -4.15){
   return (newMu)
 }
 
+
 #Calculation of the new lag time.
 new_lag_time <- function (newTemp, oldLag, oldTemp = 6, T0 = -4.15) {
   numerator <- oldTemp -T0
@@ -134,20 +135,21 @@ An adjustment factor of 1.32 was chosen to match the growth rate obtained to mat
 Thus chunk generates change as a factor of time in system. 
 ```{r}
 #Growth of milk over the ST 5 day condition
-Output_Milk<-Spoilage_Function_Single_Milk(Cont = 2.44, Pop_Max =8.14, Time_Temp_df = Time_Temp_Profile, Interval =1/60,AF = 1.32)
+Output_Milk<-Spoilage_Function_Single_Milk(Cont = 2.44, Pop_Max =8.14, Time_Temp_df = Time_Temp_Profile, Interval =1/60,AF = 1.34)
 Changes_Over_Time<-2.44+Output_Milk[[2]]
 #plot(Changes_Over_Time)
 
 #Growth of milk for the refrigerated control
-Output_Milk_RC<-Spoilage_Function_Single_Milk(Cont = 2.44, Pop_Max =8.14, Time_Temp_df = Time_Temp_Profile_RC, Interval =1/60,AF = 1.32)
+Output_Milk_RC<-Spoilage_Function_Single_Milk(Cont = 2.44, Pop_Max =8.14, Time_Temp_df = Time_Temp_Profile_RC, Interval =1/60,AF = 1.34)
 Changes_Over_Time_RC<-2.44+Output_Milk_RC[[2]]
-#plot(Changes_Over_Time_RC)
+plot(Changes_Over_Time_RC)
 
 #calculating the milk with the fixed model Adjustment Factor 1.00. 
 
 #Growth of milk over the ST 5 day condition
 Output_Milk<-Spoilage_Function_Single_Milk(Cont = 2.44, Pop_Max =8.14, Time_Temp_df = Time_Temp_Profile, Interval =1/60,AF = 1)
 Changes_Over_Time_NAF<-2.44+Output_Milk[[2]]
+plot(Changes_Over_Time_NAF)
 
 #Growth of milk using overnight storage
 Output_Milk_RC<-Spoilage_Function_Single_Milk(Cont = 2.44, Pop_Max =8.14, Time_Temp_df = Time_Temp_Profile_RC, Interval =1/60,AF = 1)
@@ -162,7 +164,7 @@ df_rt_AF = data.frame("Share Table" = Changes_Over_Time,
                       "min" = 1:length(Changes_Over_Time))
 
 df_rt_AF_melted<-melt(df_rt_AF,id.vars = "min")
-df_rt_AF_melted$AF = "Adjusted (Factor = 1.32)"
+df_rt_AF_melted$AF = "Adjusted (Factor = 1.34)"
 
 df_rt_NAF = data.frame("Share Table" =Changes_Over_Time_NAF,
                       "Refrigerated Control" = Changes_Over_Time_RC_NAF[1:length(Changes_Over_Time_NAF)],
@@ -185,6 +187,18 @@ December_Growth_Data_Comb = rbind(December_Growth_Data_R1,December_Growth_Data_R
 
 December_RC_Data_Comb<-data.frame("min" = c(0,1440,2880,4320,5760), 
                                     "counts" = c(2.44, 3.25,4.31,5.39,6.19))
+
+#For  Both winter and summer trials
+All_Seasons_RC_Data_Comb<-data.frame("min" = c(0,0,0,
+                                               1440,1440,1440,
+                                               2880,2880,2880,
+                                               4320,4320,4320,
+                                               5760,5760,5760), 
+                                    "counts" = c(2.44,2.31,2.31,
+                                                 2.47,2.7,3.25,
+                                                 3.31,3.64,4.31,
+                                                 4.47,4.48,5.39,
+                                                 5.31,5.31,6.19))
 
 
 
@@ -227,20 +241,29 @@ Individual_Analysis<-Individual_Analysis %>%
   filter(TotServices==max(TotServices))
 #3
 AnalysysDF<-Individual_Analysis
+AnalysisDF_Summer<-Individual_Analysis
 AnalysysDF_2<-Individual_Analysis
 
 #Adding the time of the services for those milks that were added to the service line during the lunch period. The residence time is ajusted to show all milks were set outusde refrigeration for the whole lunch period. 
 AnalysysDF[AnalysysDF$Initial.Service>1,]
 AnalysysDF$TotTime<-AnalysysDF$TotTime+(as.integer(AnalysysDF$Initial.Service)-1)*(Time_Service_Length + Time_Turnaround_Length)
 AnalysysDF$Shared<-ifelse(AnalysysDF$STtimes>0, "Yes", "No")
+
+
+#Updating the summer one
+#Adding the time of the services for those milks that were added to the service line during the lunch period. The residence time is ajusted to show all milks were set outusde refrigeration for the whole lunch period. 
+AnalysisDF_Summer[AnalysisDF_Summer$Initial.Service>1,]
+AnalysisDF_Summer$TotTime<-AnalysisDF_Summer$TotTime+(as.integer(AnalysisDF_Summer$Initial.Service)-1)*(Time_Service_Length + Time_Turnaround_Length)
+AnalysisDF_Summer$Shared<-ifelse(AnalysisDF_Summer$STtimes>0, "Yes", "No")
 ```
 
 
 ## Updating Final levels in milk based on the growth observed as the total residence time in milk
 ```{r}
-Output_Milk<-Spoilage_Function_Single_Milk(Cont = 2.44, Pop_Max =8.14, Time_Temp_df = Time_Temp_Profile, Interval =1/60,AF = 1.32)
+#Winter
+Output_Milk<-Spoilage_Function_Single_Milk(Cont = 0, Pop_Max =8.14, Time_Temp_df = Time_Temp_Profile, Interval =1/60,AF = 1.32)
 Changes_Over_Time<-Output_Milk[[2]]
-
+#max(Changes_Over_Time)
 
 NMax = 8.14
 for (i in 1:nrow(AnalysysDF)){
@@ -257,6 +280,10 @@ for (i in 1:nrow(AnalysysDF)){
   }
   AnalysysDF$SpoilageCon[i]<-Final_Con
 }
+
+#Summmer..
+Output_Milk_Summer<-Spoilage_Function_Single_Milk(Cont = 0, Pop_Max =8.14, Time_Temp_df = Time_Temp_Profile, Interval =1/60,AF = 1.32)
+Changes_Over_Time_Summer<-Output_Milk_Summer[[2]]
 
 ```
 
@@ -286,7 +313,9 @@ geom_text(aes(100,6.5,label = "Quality Threshold = 6.0"), color = "black", size 
   geom_segment(aes(x = 5760 , y = -Inf, xend = 5760, yend = 6), linetype = "dotted") +
   scale_linetype_manual(name = "",values = c("dotted"))
 
-ggsave("Figures/Share Table Spoilage-log.jpg", width =8, height = 5, units = "in", dpi = 300)
+#p_1_log
+
+#ggsave("Figures/Share Table Spoilage-log.jpg", width =8, height = 5, units = "in", dpi = 300)
 
 
 p_1<-AnalysysDF%>%
@@ -311,7 +340,9 @@ geom_text(aes(2000,6.5,label = "Quality Threshold = 6.0"), color = "black", size
   geom_segment(aes(x = 5760 , y = -Inf, xend = 5760, yend = 6), linetype = "dotted") +
   scale_linetype_manual(name = "",values = c("dotted"))
 
-ggsave("Figures/Share Table Spoilage-NonLog.jpg", width =8, height = 5, units = "in", dpi = 300)
+#p_1
+
+#ggsave("Figures/Share Table Spoilage-NonLog.jpg", width =8, height = 5, units = "in", dpi = 300)
 ```
 
 ## Code to Generate Summary Tables S3 aand S4.
@@ -364,7 +395,7 @@ Shared_s3<-AnalysysDF %>%
 
 
 Table_s3<-rbind(Overall_s3, NotShared_s3, Shared_s3)
-
+Table_s3
 
 
 ### Table S4
@@ -388,6 +419,12 @@ AnalysysDF %>%
 #Summary for paper line 448
 AnalysysDF %>% 
   filter(Shared == "Yes") %>% 
+  group_by(Location) %>% 
+  summarise(count = n(),
+            per = (count/nrow(.))*100)
+
+AnalysysDF %>% 
+  #filter(Shared == "Yes") %>% 
   group_by(Location) %>% 
   summarise(count = n(),
             per = (count/nrow(.))*100)

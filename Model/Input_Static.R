@@ -19,14 +19,13 @@
   
   N_Iterations<-round((Students_p_grade*NSLP_rate),0) #65
   
-  #Serivices, number of days we are trying to iterate. Lunch periods per day
+  #Services, number of days we are trying to iterate. Lunch periods per day
   Service_No<-2 #2 is baseline
   
   #Days we are trying to Iterate. Days
-  Food_Days<-5
+  Food_Days<-5 # 5 days of iterations
 
   #Weeks
-  
   Sens_Iterations<-10 #1000 weeks
   
   
