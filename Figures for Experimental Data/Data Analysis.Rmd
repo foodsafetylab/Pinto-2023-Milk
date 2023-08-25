@@ -1,0 +1,285 @@
+---
+title: "Summer Spoilage Study"
+author: "Gabriella Pinto"
+date: "2023-08-15"
+output: html_document
+---
+
+## Load libraries for analysis and plots
+
+```{r}
+library(readr)
+library(dplyr)
+library(grid)
+library(ggh4x)
+library(ggplot2)
+library(ggpattern)
+library(ggpubr)
+library(gmodels)
+library(Hmisc)
+library(tidyr)
+```
+
+## Import Data & Initial Data Cleaning for Figure 1: Microbial Counts
+
+```{r}
+log_szns <- read_csv("C:/Users/Gabby/Box/Share Table Project/Milk Spoilage Model Docs/Spoilage Study December/log_szns.csv")
+
+results_both = filter(log_szns)%>%
+  filter(!is.na(log_szns$sma))%>%
+  arrange(desc(tod))
+  
+results_both$rep = as.factor(results_both$rep)
+
+results_both$tod[results_both$tod == "Start"] = "Start of First Service"
+results_both$tod[results_both$tod == "End"] = "End of Second Service"
+```
+
+## Take data out of log scale for calculations
+
+```{r}
+results_both$raw = 10^(results_both$sma)
+```
+
+## Calculation for Error Bars
+
+#Writing log function with rounding
+```{r}
+baselog = function(x){
+  round(log10(x),2)
+}
+```
+
+#Split into inoculated data frame, calculate mean, min and max for error bars
+
+```{r}
+ino_errors = filter(results_both)%>%
+  filter(type == "Inoculated A" | type == "Inoculated B" | type == "Inoculated"| type == "Refrigerated Control Inoculated" | type == "Refrigerated Control A" | type == "Refrigerated Control B")%>%
+  group_by(day, tod, Season,type)%>%
+  summarise (mean = baselog(mean(raw)), min = baselog(min(raw)), max = baselog(max(raw)))
+```
+
+#Perform necessary data cleaning for plot
+```{r}
+ino_errors$Inoculated = "Inoculated Milk"
+ino_errors$type[ino_errors$type == "Inoculated A"] = "Inoculated"
+ino_errors$type[ino_errors$type == "Inoculated B"] = "Inoculated"
+ino_errors$type[ino_errors$type == "Refrigerated Control Inoculated"] = "Refrigerated Control"
+ino_errors$type[ino_errors$type == "Refrigerated Control A"] = "Refrigerated Control"
+ino_errors$type[ino_errors$type == "Refrigerated Control B"] = "Refrigerated Control"
+ino_errors$tod<-factor(ino_errors$tod, levels = c("Start of First Service", "End of Second Service"))
+```
+
+#Split into NOT inoculated data frame, calculate mean, min and max for error bars
+
+```{r}
+noino_errors = filter(results_both)%>%
+  filter(type == "Not Inoculated" | type == "Refrigerated Control Not Inoculated")%>%
+  group_by(day, tod, Season,type)%>%
+  summarise (mean = baselog(mean(raw)), min = baselog(min(raw)), max = baselog(max(raw)))
+```
+
+#Perform necessary data cleaning for plot
+```{r}
+noino_errors$`Not Inoculated` = "Uninoculated Milk"
+noino_errors$type[noino_errors$type == "Refrigerated Control Not Inoculated"] = "Refrigerated Control"
+noino_errors$tod<-factor(noino_errors$tod, levels = c("Start of First Service", "End of Second Service"))
+```
+
+## Generate plots for Figure 1
+
+#Inoculation Figure 1
+
+```{r}
+sma_ino_eb = ino_errors %>%
+  ggplot(aes(x =`day`, y = `mean`, color = `type`, shape = `tod`))+
+  geom_point(position = position_dodge(width =0.7), size = 2, stroke = 1.5)+
+  geom_errorbar(aes(ymin =`min`, ymax=`max`,color = `type`, shape = `tod`),position = position_dodge(width =0.7), size = 0.5)+
+  xlab("Day")+
+  xlim(0.5,5.5)+
+  ylim(2,7.5)+
+  ylab((expression("Counts log"[10]~"(CFU/ml)")))+
+  scale_color_discrete(name = "Sample Type")+
+  scale_shape_manual(name = "Collection Time", values = c(16, 2), guide = guide_legend(nrow = 1, ncol =2, byrow =TRUE))+
+  theme_bw()+
+  facet_grid2(Inoculated~Season, switch = "y")+
+  theme(legend.title= element_text(size=9,face="bold"), 
+        axis.title = element_text(size = 12), 
+        plot.title = element_text(face="bold", hjust =0.5), 
+        legend.text = element_text(size=9),
+        legend.position = "top",
+        legend.key = element_rect(fill="whitesmoke"), 
+        legend.background = element_rect(fill=NA),
+        #legend.direction = "vertical",
+        legend.margin = margin())+
+  geom_hline(yintercept = 6, color = "black", linewidth = 0.8)+
+  geom_text(aes(3,5.5,label = "Spoilage Threshold = 6.0", vjust = -1), color = "black", size  = 3, position = position_dodge(width =1), check_overlap = TRUE)+
+  geom_hline(yintercept = 2.31, color = "black", linewidth =1, linetype = "dashed")+
+  geom_text(aes(3,2.31,label = "LOD = 2.31", vjust = -1), color = "black", size  = 3,position = position_dodge(width = 1), check_overlap = TRUE)
+
+sma_ino_eb
+```
+
+
+#No inoculation Figure 1
+
+```{r}
+sma_noino_eb = noino_errors %>%
+  ggplot(aes(x =`day`, y = `mean`, color = `type`, shape = `tod`))+
+  geom_point(position = position_dodge(width =0.7), size = 2, stroke = 1.5)+
+  geom_errorbar(aes(ymin =`min`, ymax=`max`,color = `type`, shape = `tod`),position = position_dodge(width =0.7), size = 0.5)+
+  xlab("Day")+
+  xlim(0.5,5.5)+
+  ylim(2,7.5)+
+  ylab((expression("Counts log"[10]~"(CFU/ml)")))+
+  scale_color_discrete(name = "Sample Type")+
+  scale_shape_manual(name = "Collection Time", values = c(16, 2), guide = guide_legend(nrow = 3, ncol =1, byrow =TRUE))+
+  theme_bw()+
+  facet_grid2(`Not Inoculated`~Season, switch = "y")+
+  theme(legend.title= element_text(size=9,face="bold"), 
+        axis.title = element_text(size = 12), 
+        plot.title = element_text(face="bold", hjust =0.5), 
+        legend.text = element_text(size=9),
+        legend.position = "right",
+        legend.key = element_rect(fill="whitesmoke"), 
+        legend.background = element_rect(fill=NA),
+        legend.direction = "vertical",
+        legend.margin = margin())+
+  geom_hline(yintercept = 6, color = "black", linewidth = 0.8)+
+  geom_text(aes(3,5.5,label = "Spoilage Threshold = 6.0", vjust = -1), color = "black", size  = 3, position = position_dodge(width =1), check_overlap = TRUE)+
+  geom_hline(yintercept = 2.31, color = "black", linewidth =1, linetype = "dashed")+
+  geom_text(aes(3,2.31,label = "LOD = 2.31", vjust = -1), color = "black", size  = 3,position = position_dodge(width = 1), check_overlap = TRUE)
+
+sma_noino_eb
+```
+
+#Export Figure 1
+```{r}
+require(grid)
+szn_plot_eb = ggarrange(sma_ino_eb + rremove("ylab") + rremove("xlab"), sma_noino_eb + rremove("ylab") + rremove("xlab"),
+                           ncol = 1, nrow =2,
+                           legend.grob = get_legend(sma_ino_eb),
+                           legend = "top",
+                           widths = 10,
+                           heights = 20)
+
+  annotate_figure(szn_plot_eb, 
+                  left = textGrob((expression("Counts log"[10]~"(CFU/ml)")), 
+                                  rot = 90, 
+                                  vjust = 1),
+                                 
+                  bottom = textGrob("Day"))%>%
+    ggexport(filename = "Figure 1.tiff", res = 250, width = 2500, height = 2000, compression = "lzw")
+
+```
+
+
+## Import Data & Initial Data Cleaning for Figure 2: Log Shifts
+
+
+```{r}
+szn_shift <- read_csv("C:/Users/Gabby/Box/Share Table Project/Milk Spoilage Model Docs/Spoilage Study December/szns_shift.csv")
+
+shiftnew2 = szn_shift
+
+shiftnew2$`shift type`[shiftnew2$`shift type` == "overnight"] = "Overnight"
+shiftnew2$`shift type`[shiftnew2$`shift type` == "share table"] = "Share Table"
+
+shiftnew2$day = as.factor(shiftnew2$day)
+shiftnew2$Inoculated = "Inoculated Milk"
+shiftnew2$`Not Inoculated` = "Uninoculated Milk"
+
+```
+
+# Creating new data frame with all data points to overlay for inoculated plot
+
+```{r}
+points2 = shiftnew2 %>%
+  filter(media == "sma" & type == "Inoculated")
+
+```
+
+# Creating new data frame with all data points to overlay for NOT inoculated plot
+```{r}
+points3 = shiftnew2 %>%
+  filter(media == "sma" & type == "Not Inoculated")
+```
+
+
+## Generate plots for Figure 2
+
+```{r}
+hist_both = shiftnew2 %>% 
+  filter(type == "Inoculated" & media == "sma") %>%
+  ggplot(aes( `day`, `log shift`, color = `shift type` ))+
+    facet_grid2(Inoculated~`Season`, switch = "y")+
+    geom_boxplot(varwidth = TRUE)+
+    scale_color_discrete(name = "Storage Type", guide = guide_legend(reverse = TRUE, nrow =1 , ncol = 3, byrow =TRUE))+
+    geom_point(data = points2, aes(x= `day`, y = `log shift`, color = `shift type`), position = position_dodge(width =0.5), size = 1.25)+
+    #geom_jitter(shape = 16, size = 2, position = position_jitterdodge(jitter.width = 0.1, dodge.width = 0.5))+
+    theme_bw()+
+    theme(legend.title= element_text(size=9,face="bold"), 
+        axis.title = element_text(size = 12), 
+        plot.title = element_text(face="bold"), 
+        legend.text = element_text(size=9),
+        legend.position = "bottom",
+        legend.key = element_rect(fill="whitesmoke"), 
+        legend.background = element_rect(fill=NA),
+        #legend.direction = "vertical",
+        legend.margin = margin())+
+    #guides(color=guide_legend(nrow=1, ))+
+    xlab("Day")+
+    ylab((expression("Change in Microbial Counts log"[10]~"(CFU/ml)")))
+
+hist_both
+```
+
+```{r}
+hist_both_no = shiftnew2 %>% 
+  filter(type == "Not Inoculated" & media == "sma") %>%
+  ggplot(aes( `day`, `log shift`, color = `shift type` ))+
+    facet_grid2(`Not Inoculated`~`Season`, switch = "y")+
+    geom_boxplot(varwidth = TRUE)+
+    scale_color_discrete(name = "Storage Type", guide = guide_legend(reverse = TRUE, nrow =1, ncol =3, byrow =TRUE))+
+    geom_point(data = points3, aes(x= `day`, y = `log shift`, color = `shift type`), position = position_dodge(width =0.5), size = 1.25)+
+    #geom_jitter(shape = 16, size = 2, position = position_jitterdodge(jitter.width = 0.1, dodge.width = 0.5))+
+    theme_bw()+
+    theme(legend.title= element_text(size=9,face="bold"), 
+        axis.title = element_text(size = 12), 
+        plot.title = element_text(face="bold"), 
+        legend.text = element_text(size=9),
+        legend.position = "bottom",
+        legend.key = element_rect(fill="whitesmoke"), 
+        legend.background = element_rect(fill=NA),
+        #legend.direction = "vertical",
+        legend.margin = margin())+
+    #guides(color=guide_legend(nrow=3))+
+    xlab("Day")+
+    ylab((expression("Change in Microbial Counts log"[10]~"(CFU/ml)")))
+
+hist_both_no
+
+```
+```{r}
+ggsave("C:/Users/Gabby/Downloads/logshift_hist_no_both.tiff", plot = hist_both_no, width = 7.5, height = 5, units = "in", dpi = 1000)
+```
+
+#Export Figure 2
+
+```{r}
+szn_shift_plot = ggarrange(hist_both + rremove("ylab") + rremove("xlab"), hist_both_no + rremove("ylab") + rremove("xlab"),
+                           ncol = 1, nrow =2,
+                           legend.grob = get_legend(hist_both),
+                           legend = "top",
+                           widths = 10,
+                           heights = 20)
+
+  annotate_figure(szn_shift_plot, 
+                  left = textGrob((expression("Change in Microbial Counts log"[10]~"(CFU/ml)")), 
+                                  rot = 90, 
+                                  vjust = 1),
+                                 
+                  bottom = textGrob("Day"))%>%
+    ggexport(filename = "Figure 2.tiff", res = 250, width = 2500, height = 2000, compression = "lzw")
+```
+
