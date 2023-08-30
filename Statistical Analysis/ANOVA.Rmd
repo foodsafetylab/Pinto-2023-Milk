@@ -1,0 +1,118 @@
+---
+title: "ANOVA"
+author: "Gabriella Pinto"
+date: "2023-08-29"
+output: html_document
+---
+###Data Analysis
+```{r}
+library(readr)
+library(dplyr)
+library(tidyverse)
+```
+
+
+## Analysis of plate counts on both media types in winter
+
+#This is used to support the justification for using one media type in the summer. 
+
+```{r}
+count <- read_csv("C:/Users/gnpinto2/Box/Share Table Project/Milk Spoilage Model Docs/Spoilage Study December/counts ANOVA.csv")
+```
+
+#Filter the data, make "rep" (which represents a milk carton) and "day" factors instead of numeric variable
+
+NOTE: We only run this analysis for inoculated milk, as there were no observable shifts in uninoculated milk during the winter season (i.e., we never observed growth about the lower LOD in uninoculated milk)
+
+```{r}
+count$rep = as.factor(count$rep)
+count$day = as.factor(count$day)
+
+low_in_counts = count%>%
+  filter(type == "Low, inoculated")
+```
+
+#Run the ANOVA for inoculated milk during the winter season
+
+```{r}
+
+low_counts= aov(low_in_counts$count ~ low_in_counts$media*low_in_counts$rep*low_in_counts$tod)
+summary(low_counts)
+
+TukeyHSD(low_counts)
+```
+
+Summary: The Tukey-pairwise comparison for the interaction between media, replicate and time of day (start of lunch 1 or end of lunch 2) shows a P-value of 1.000. Meaning, on a given day, the counts on either media type for a given milk did not differ significantly.
+
+
+##Analysis of Log Shifts for both seasons
+
+#Load the data
+```{r}
+shiftnew = read_csv("C:/Users/gnpinto2/Box/Share Table Project/Milk Spoilage Model Docs/Spoilage Study December/szns_shift.csv")
+```
+#Again, change rep & day to factors and separate into 2 dataframes based on inoculation status
+
+```{r}
+
+shiftnew$rep = as.factor(shiftnew$rep)
+shiftnew$day = as.factor(shiftnew$day)
+colnames(shiftnew)[2] = "shtype"
+
+noino = shiftnew%>%
+  filter(type == "Not Inoculated")
+
+ino = shiftnew%>%
+  filter(type == "Inoculated")
+
+```
+
+# ANOVA for difference in milks each day, shift type (overnight, share table, refrigerated control), season and replicate (milks)
+
+For uninoculated milk: 
+
+```{r}
+noino_aov = aov(noino$`log shift` ~ noino$day*noino$shtype*noino$Season)
+summary(noino_aov)
+```
+For inoculated milk: 
+
+```{r}
+ino_aov = aov(ino$`log shift` ~ino$day*ino$shtype*ino$Season)
+summary(ino_aov)
+```
+
+# Tukey for each ANOVA to find where the differences exist in shifts
+
+```{r}
+TukeyHSD(noino_aov)
+```
+
+```{r}
+noino_tukey = TukeyHSD(noino_aov)
+noino_tukey
+
+results_noino = as.data.frame(noino_tukey$`noino$day:noino$shtype:noino$Season`)
+results_noino
+```
+```{r}
+write.csv(results_noino, "C:/Users/gnpinto2/Box/Share Table Project/Milk Spoilage Model Docs/Paper Documents/Figures and Tables (DRAFT)/tukeynoino_bothseasons.csv")
+```
+
+
+```{r}
+TukeyHSD(ino_aov)
+```
+
+```{r}
+ino_tukey = TukeyHSD(ino_aov)
+ino_tukey
+
+results_ino = as.data.frame(ino_tukey$`ino$day:ino$shtype:ino$Season`)
+results_ino
+```
+
+```{r}
+write.csv(results_ino, "C:/Users/gnpinto2/Box/Share Table Project/Milk Spoilage Model Docs/Paper Documents/Figures and Tables (DRAFT)/tukeyino_bothseasons.csv")
+```
+
