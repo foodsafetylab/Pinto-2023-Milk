@@ -439,6 +439,21 @@ p_1_summer
 
 ggsave("Figures/Share Table Spoilage-NonLog-summer.jpg", width =8, height = 5, units = "in", dpi = 300)
 
+library(ggpubr)
+require(grid)
+
+
+p_1_tog<-ggarrange(p_1_summer+rremove("ylab")+rremove("xlab") , p_1+rremove("ylab"), ncol = 1, nrow = 2,legend.grob = get_legend(p_1),
+                           legend = "top",
+                           widths = 10,
+                           heights = 20
+                   )
+annotate_figure(p_1_tog, 
+                left = textGrob((expression(paste(italic("Pseudomonas poae"), "population (log"[10]~"CFU/ml"))), 
+                                rot = 90, 
+                                vjust = 1))
+
+ggsave("Figures/Share Table Spoilage-NonLog-Combined.jpg", width =8, height = 8, units = "in", dpi = 300)
 
 ```
 
