@@ -7,6 +7,8 @@ Please find all necessary files for the paper in the three folders listed below.
 1. Data from Experiments
 2. Figures for Experimental Data
 3. Model
+4. Statistical Analysis
+5. Supplemental Materials
 
 
 Thank you!
